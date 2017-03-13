@@ -116,7 +116,60 @@ function publish(args) {
 }
 
 function deploy(args) {
+    let options = {
+      serviceId: process.env["RANCHER_SERVICE_ID"],
+      imageName: null,
+      imageTag: null,
+      env: 'prod',
+      rancherUrl: process.env["RANCHER_URL"],
+      rancherAccessKey: process.env["RANCHER_ACCESS_KEY"],
+      rancherSecretKey: process.env["RANCHER_SECRET_KEY"]
+    };
 
+    console.log(options);
+
+    options = args.reduce((opts, arg) => {
+      if (arg.indexOf("--url=") == 0) {
+        return Object.assign({}, opts, {rancherUrl: arg.replace('--url=', '')});
+      } else if (arg.indexOf("--access-key=") == 0) {
+        return Object.assign({}, opts, {rancherAccessKey: arg.replace('--access-key=', '')});
+      } else if (arg.indexOf("--secret-key=") == 0) {
+        return Object.assign({}, opts, {rancherSecretKey: arg.replace('--secret-key=', '')});
+      } else if (arg.indexOf("--service=") == 0) {
+        return Object.assign({}, opts, {serviceId: arg.replace('--service=', '')});
+      } else if (arg.indexOf("--image=") == 0) {
+        return Object.assign({}, opts, {imageName: arg.replace('--image=', '')});
+      } else if (arg.indexOf("--env=") == 0) {
+        return Object.assign({}, opts, {env: arg.replace('--env=', '')});
+      } else if (arg == 'latest') {
+        return Object.assign({}, opts, {imageTag: 'latest'});
+      } else {
+        return opts;
+      }
+    }, options);
+
+    getVersionTag(options.env && options.env == 'staging' ? 'staging-' : '', (versionTag) => {
+      if (!options.imageTag) {
+        options.imageTag = versionTag;
+      } else {
+        options.imageTag = options.env == 'staging' ? 'staging-latest' : 'latest';
+      }
+
+      if (!options.serviceId || !options.imageName || !options.imageTag || !options.rancherUrl ||
+          !options.rancherAccessKey || !options.rancherSecretKey || !options.env) {
+        throw "Missing parameters";
+      }
+
+      cmd(`docker run --rm -t \
+        -e RANCHER_URL=${options.rancherUrl} \
+        -e RANCHER_ACCESS_KEY=${options.rancherAccessKey} \
+        -e RANCHER_SECRET_KEY=${options.rancherSecretKey} \
+        etlweather/gaucho \
+        upgrade ${options.serviceId} \
+        --complete_previous=True \
+        --imageUuid=docker:${options.imageName}:${options.imageTag} \
+        --auto_complete=True`);
+  });
 }
 
 module.exports = {

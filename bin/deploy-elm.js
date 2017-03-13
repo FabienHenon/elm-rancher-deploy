@@ -36,7 +36,7 @@ function usage() {
 
     tags and pushes the release image. One image has a tag with the current version, and another image has the latest tag. If staging env is specified, then tags are prefixed by "staging-"
 
-    $ deploy-elm deploy [--url=<rancher_url>] [--access-key=<access_key>] [--secret-key=<secret_key>] [--service=<service_id>] [--env=<env>] <imageName> [latest]
+    $ deploy-elm deploy [--url=<rancher_url>] [--access-key=<access_key>] [--secret-key=<secret_key>] [--service=<service_id>] [--env=<env>] --image=<imageName> [latest]
 
     deploys the specified image and tag (default is version tag with eventually staging- as prefix) to rancher, given rancher url, credentials and service id.
     Rancher information can be ommited if the following envrionment variables are set:
