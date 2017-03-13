@@ -21,9 +21,19 @@ function cmd(cmd, next, canFail) {
   exec(cmd, puts(next, !!canFail));
 }
 
-function getVersionTag() {
-  var json = JSON.parse(fs.readFileSync('elm-package.json', 'utf8'));
+function getVersionTag(prefix, next) {
+  const json = JSON.parse(fs.readFileSync('elm-package.json', 'utf8'));
+  const version = json['version'];
 
+  exec('git rev-parse HEAD', (error, stdout, stderr) => {
+    const sha = stdout.slice(0, 10);
+
+    exec('git rev-list --count HEAD', (error, stdout, stderr) => {
+      const count = stdout.trim();
+
+      next(`${prefix}${version}.${count}-${sha}`);
+    });
+  });
 }
 
 function bump(args) {
@@ -31,7 +41,7 @@ function bump(args) {
 
   cmd('elm package bump', () => {
     cmd('git add elm-package.json', () => {
-      var json = JSON.parse(fs.readFileSync('elm-package.json', 'utf8'));
+      const json = JSON.parse(fs.readFileSync('elm-package.json', 'utf8'));
 
       cmd(`git commit -m "Version ${json["version"]} ${suffix}"`, () => {
         cmd('git push', () => {
@@ -84,7 +94,25 @@ function release(args) {
 }
 
 function publish(args) {
+  if (args.length == 0) {
+    throw 'Image name is needed (without tag)'
+  }
 
+  const image = args[0];
+  const tag = args.length > 1 && args[1] == 'staging' ? 'staging-release' : 'release';
+  const tagLatest = args.length > 1 && args[1] == 'staging' ? 'staging-latest' : 'latest';
+
+  getVersionTag(args.length > 1 && args[1] == 'staging' ? 'staging-' : '', (versionTag) => {
+    cmd(`docker tag ${image}:${tag} ${image}:${versionTag}`, () => {
+      cmd(`docker push ${image}:${versionTag}`, () => {
+        cmd(`docker tag ${image}:${tag} ${image}:${tagLatest}`, () => {
+          cmd(`docker push ${image}:${tagLatest}`, () => {
+            console.log(`Docker images ${image}:${versionTag} and ${image}:${tagLatest} have been successfully created and pushed`);
+          });
+        });
+      });
+    });
+  });
 }
 
 function deploy(args) {
