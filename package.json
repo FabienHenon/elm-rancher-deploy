@@ -1,0 +1,29 @@
+{
+  "name": "elm-rancher-deploy",
+  "version": "1.0.0",
+  "description": "Elm script to deploy on Rancher",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FabienHenon/elm-rancher-deploy.git"
+  },
+  "keywords": [
+    "elm",
+    "rancher",
+    "deploy",
+    "CI",
+    "CD"
+  ],
+  "author": "Fabien Henon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FabienHenon/elm-rancher-deploy/issues"
+  },
+  "homepage": "https://github.com/FabienHenon/elm-rancher-deploy#readme",
+  "bin": {
+    "deploy-elm": "bin/deploy-elm.js"
+  },
+  "dependencies": {
+  }
+}
