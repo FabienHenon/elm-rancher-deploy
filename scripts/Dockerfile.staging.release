@@ -1,0 +1,8 @@
+FROM kyma/docker-nginx
+
+# Update conf to redirect to home page if no static asset is found
+COPY scripts/nginx-default.conf /etc/nginx/sites-enabled/default
+
+COPY dist/ /var/www
+
+CMD 'nginx'
