@@ -1,0 +1,26 @@
+FROM node:6.9.5
+
+ENV TERM=xterm ELM_VERSION=0.18.0
+
+RUN npm install -g elm@$ELM_VERSION
+
+ENV HOME=/opt/app/
+
+WORKDIR /opt/app
+
+COPY package.json elm-package.json ./
+RUN npm install \
+  && elm package install -y
+
+# CircleCI / Travis trick for compile time
+RUN if [ ! -d libsysconfcpus ]; then git clone https://github.com/obmarg/libsysconfcpus.git; fi \
+  && cd libsysconfcpus && ./configure && make && make install && cd ../ \
+  && mv node_modules/.bin/elm-make node_modules/.bin/elm-make-old \
+  && printf "#\!/bin/bash\n\necho \"Running elm-make with sysconfcpus -n 2\"\n\nsysconfcpus --num 2 elm-make-old \"\$@\"" > node_modules/.bin/elm-make \
+  && chmod +x node_modules/.bin/elm-make
+
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY config/ ./config/
+
+RUN npm run build -- --env prod

@@ -2,6 +2,7 @@
 
 const {exec} = require('child_process');
 const fs = require('fs');
+const path = require('path');
 
 function puts(next) {
   return (error, stdout, stderr) => {
@@ -39,7 +40,16 @@ function bump(args) {
 }
 
 function build(args) {
+  if (args.length == 0) {
+    throw 'Image name is needed (without tag)'
+  }
 
+  const image = args[0];
+  const tag = args.length > 1 && args[1] == 'staging' ? 'staging-build' : 'build';
+
+  const dockerFile = path.resolve(__dirname, 'scripts/Dockerfile.staging.build');
+
+  cmd(`docker build -f ${dockerFile} -t ${image}:${tag} .`);
 }
 
 function release(args) {
