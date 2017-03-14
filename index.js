@@ -62,6 +62,7 @@ function copyFile(source, target, cb) {
 
 function copyDockerfile(file, action) {
   if (fs.existsSync(file)) {
+    console.log('Using existing file ' + file);
     action(() => null);
   } else {
     const source = path.resolve(__dirname, 'scripts/' + file);
@@ -72,6 +73,7 @@ function copyDockerfile(file, action) {
       } else {
         action(() => {
           // Remove file
+          console.log('Removing file ' + file);
           fs.unlinkSync(file);
         });
       }
@@ -107,8 +109,8 @@ function build(args) {
 
   const file = args.length > 1 && args[1] == 'staging' ? 'Dockerfile.staging.build' : 'Dockerfile.build';
 
-  copyDockerfile(file, () => {
-    cmd(`docker build -f ${file} -t ${image}:${tag} .`);
+  copyDockerfile(file, (remove) => {
+    cmd(`docker build -f ${file} -t ${image}:${tag} .`, remove);
   });
 }
 
@@ -129,9 +131,12 @@ function release(args) {
         cmd(`docker rm -f ${cid}`, () => {
           const file = args.length > 1 && args[1] == 'staging' ? 'Dockerfile.staging.release' : 'Dockerfile.release';
 
-          copyDockerfile(file, () => {
-            copyDockerfile('nginx-default.conf', () => {
-              cmd(`docker build -f ${file} -t ${image}:${tag} .`);
+          copyDockerfile(file, (removeDockerFile) => {
+            copyDockerfile('nginx-default.conf', (removeNGinxFile) => {
+              cmd(`docker build -f ${file} -t ${image}:${tag} .`, () => {
+                removeNGinxFile();
+                removeDockerFile();
+              });
             });
           });
         }, true);
@@ -173,8 +178,6 @@ function deploy(args) {
       rancherSecretKey: process.env["RANCHER_SECRET_KEY"]
     };
 
-    console.log(options);
-
     options = args.reduce((opts, arg) => {
       if (arg.indexOf("--url=") == 0) {
         return Object.assign({}, opts, {rancherUrl: arg.replace('--url=', '')});
@@ -195,6 +198,9 @@ function deploy(args) {
       }
     }, options);
 
+    console.log('args', args);
+    console.log('options', options);
+
     getVersionTag(options.env && options.env == 'staging' ? 'staging-' : '', (versionTag) => {
       if (!options.imageTag) {
         options.imageTag = versionTag;
@@ -204,6 +210,7 @@ function deploy(args) {
 
       if (!options.serviceId || !options.imageName || !options.imageTag || !options.rancherUrl ||
           !options.rancherAccessKey || !options.rancherSecretKey || !options.env) {
+        console.log(options);
         throw "Missing parameters";
       }
 
