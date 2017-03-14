@@ -57,3 +57,7 @@ Rancher information can be ommited if the following envrionment variables are se
   * `RANCHER_ACCESS_KEY`: Access key for Rancher API
   * `RANCHER_SECRET_KEY`: Secret key for Rancher API
   * `RANCHER_URL`: Rancher API Url
+
+## Customization
+
+You can cusyomize the Dockerfiles by copying them from the `scrpts` directory directly to your application directory. **Copy the entire `scripts` directory content because you will neeed all files in it**

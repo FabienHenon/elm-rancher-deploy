@@ -36,6 +36,48 @@ function getVersionTag(prefix, next) {
   });
 }
 
+function copyFile(source, target, cb) {
+  var cbCalled = false;
+
+  var rd = fs.createReadStream(source);
+  rd.on("error", function(err) {
+    done(err);
+  });
+  var wr = fs.createWriteStream(target);
+  wr.on("error", function(err) {
+    done(err);
+  });
+  wr.on("close", function(ex) {
+    done();
+  });
+  rd.pipe(wr);
+
+  function done(err) {
+    if (!cbCalled) {
+      cb(err);
+      cbCalled = true;
+    }
+  }
+}
+
+function copyDockerfile(file, action) {
+  if (fs.existsSync(file)) {
+    action(() => null);
+  } else {
+    const source = path.resolve(__dirname, 'scripts/' + file);
+    copyFile(source, file, (err) => {
+      if (err) {
+        console.warn('Error copying file from ' + source + ' to ' + file);
+      } else {
+        action(() => {
+          // Remove file
+          fs.unlinkSync(file);
+        });
+      }
+    });
+  }
+}
+
 function bump(args) {
   const suffix = args.length > 0 ? args[0] : '';
 
@@ -63,9 +105,10 @@ function build(args) {
   const tag = args.length > 1 && args[1] == 'staging' ? 'staging-build' : 'build';
 
   const file = args.length > 1 && args[1] == 'staging' ? 'Dockerfile.staging.build' : 'Dockerfile.build';
-  const dockerFile = path.resolve(__dirname, 'scripts/' + file);
 
-  cmd(`docker build -f ${dockerFile} -t ${image}:${tag} .`);
+  copyDockerfile(file, () => {
+    cmd(`docker build -f ${file} -t ${image}:${tag} .`);
+  });
 }
 
 function release(args) {
@@ -84,9 +127,12 @@ function release(args) {
       cmd(`docker cp ${cid}:/opt/app/dist dist`, () => {
         cmd(`docker rm -f ${cid}`, () => {
           const file = args.length > 1 && args[1] == 'staging' ? 'Dockerfile.staging.release' : 'Dockerfile.release';
-          const dockerFile = path.resolve(__dirname, 'scripts/' + file);
 
-          cmd(`docker build -f ${dockerFile} -t ${image}:${tag} .`);
+          copyDockerfile(file, () => {
+            copyDockerfile('nginx-default.conf', () => {
+              cmd(`docker build -f ${file} -t ${image}:${tag} .`);
+            });
+          });
         }, true);
       });
     });
