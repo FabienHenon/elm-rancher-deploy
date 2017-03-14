@@ -81,14 +81,33 @@ function copyDockerfile(file, action) {
   }
 }
 
+function bumpVersion(file, cb) {
+  let json = JSON.parse(fs.readFileSync('elm-package.json', 'utf8'));
+  const version = json['version'];
+
+  const parts = version.split('.');
+
+  if (parts.length < 3) {
+    throw 'Invalid version number: ' + version;
+  } else {
+    const newVersion = `${parts[0]}.${parts[1]}.${parseInt(parts[2]) + 1}`;
+
+    console.log(`Bumping from version ${version} to version ${newVersion}`);
+
+    json['version'] = newVersion;
+
+    fs.readFileSync('elm-package.json', JSON.stringify(json, null, 4), 'utf8');
+
+    cb();
+  }
+}
+
 function bump(args) {
   const suffix = args.length > 0 ? args[0] : '';
 
-  cmd('elm package bump', () => {
+  bumpVersion('elm-package.json', (version) => {
     cmd('git add elm-package.json', () => {
-      const json = JSON.parse(fs.readFileSync('elm-package.json', 'utf8'));
-
-      cmd(`git commit -m "Version ${json["version"]} ${suffix}"`, () => {
+      cmd(`git commit -m "Version ${version} ${suffix}"`, () => {
         cmd('git push', () => {
           cmd(`git tag ${version}`, () => {
             cmd('git push --tags');
