@@ -98,7 +98,7 @@ function bumpVersion(file, cb) {
 
     fs.writeFileSync('elm-package.json', JSON.stringify(json, null, 4), 'utf8');
 
-    cb();
+    cb(newVersion);
   }
 }
 
