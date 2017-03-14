@@ -65,6 +65,7 @@ function copyDockerfile(file, action) {
     action(() => null);
   } else {
     const source = path.resolve(__dirname, 'scripts/' + file);
+    console.log('Copying ' + source + ' to ' + file);
     copyFile(source, file, (err) => {
       if (err) {
         console.warn('Error copying file from ' + source + ' to ' + file);
