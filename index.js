@@ -96,7 +96,7 @@ function bumpVersion(file, cb) {
 
     json['version'] = newVersion;
 
-    fs.readFileSync('elm-package.json', JSON.stringify(json, null, 4), 'utf8');
+    fs.writeFileSync('elm-package.json', JSON.stringify(json, null, 4), 'utf8');
 
     cb();
   }
