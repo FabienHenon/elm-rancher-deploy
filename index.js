@@ -198,9 +198,6 @@ function deploy(args) {
       }
     }, options);
 
-    console.log('args', args);
-    console.log('options', options);
-
     getVersionTag(options.env && options.env == 'staging' ? 'staging-' : '', (versionTag) => {
       if (!options.imageTag) {
         options.imageTag = versionTag;
