@@ -10,7 +10,9 @@ WORKDIR /opt/app
 
 COPY package.json elm-package.json ./
 RUN npm install \
-  && elm package install -y
+  && npm install -g elm-github-install \
+  && elm-github-install
+# && elm package install -y
 
 # CircleCI / Travis trick for compile time
 RUN if [ ! -d libsysconfcpus ]; then git clone https://github.com/obmarg/libsysconfcpus.git; fi \
