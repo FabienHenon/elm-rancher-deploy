@@ -9,8 +9,8 @@ ENV HOME=/opt/app/
 WORKDIR /opt/app
 
 COPY package.json elm-package.json ./
-RUN npm install && npm install -g elm-github-install
-RUN elm-github-install
+RUN npm install
+RUN ./node_modules/.bin/elm-install
 # && elm package install -y
 
 # CircleCI / Travis trick for compile time
