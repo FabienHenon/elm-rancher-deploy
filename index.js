@@ -18,7 +18,7 @@ function puts(next, canFail) {
 
 function cmd(cmd, next, canFail) {
   console.log(cmd);
-  exec(cmd, {maxBuffer: 1024 * 1024}, puts(next, !!canFail));
+  exec(cmd, {maxBuffer: 1024 * 4096}, puts(next, !!canFail));
 }
 
 function getVersionTag(prefix, next) {
